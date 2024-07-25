@@ -1,66 +1,69 @@
-# TO_DEVS: BURN AFTER READING
 
-Delete this section of the document once the app development is done, before publishing the repository.
-
----
-This skeleton code is a scaffolding for Python-based CLAMS app development. Specifically, it contains
-
-1. `app.py` and `metadata.py` to write the app
-1. `requirements.txt` to specify python dependencies
-1. `Containerfile` to containerize the app and specify system dependencies
-1. `.gitignore` and `.dockerignore` files listing commonly ignored files
-1. an empty `LICENSE` file to replace with an actual license information of the app
-1. This `README.md` file for additional information not specified in the general user manual at https://apps.clams.ai/clamsapp
-1. A number of GitHub Actions workflows for issue/bugreport management
-1. A GHA workflow to publish app images upon any push of a git tag
-   * **NOTE**: All GHA workflows included are designed to only work in repositories under `clamsproject` organization.
-
-Before pushing your first commit, please make sure to delete this section of the document.
-
-Then use the following section to document any additional information specific to this app. If your app works significantly different from what's described in the generic readme file, be as specific as possible.
-
-
-> **warning**
-> TO_DEVS: Delete these `TO_DEVS` notes and warnings before publishing the repository.
-
----
-
-# Gensim Tm Keywordextractor
-
-> **warning**
-> TO_DEVS: Again, delete these `TO_DEVS` notes and warnings before publishing the repository.
+# Gensim Keyword Extractor 
 
 ## Description
 
-> **note**
-> TO_DEVS: A brief description of the app, expected behavior, underlying software/library/technology, etc.
+This app extracts keywords in a text document given the LDA topic model pretrained with
+a given list of text files in a directory.
+
+## Information on the available model
+The current available model for keyword extraction is trained with 22 out of 24 NewsHour transcripts listed in
+[batch2.txt](https://github.com/clamsproject/aapb-annotations/blob/9cbe41aa124da73a0158bfc0b4dbf8bafe6d460d/batches/batch2.txt).
+Excluded files' names and reasons of exclusion are:
+* `cpb-aacip-525-028pc2v94s`: File not found in the dataset
+* `cpb-aacip_507-r785h7cp0z`: Contains no transcript but an error message
+
+This model is trained with English stopwords removed. 
+> TODO: some other default parameters of the current model 
 
 ## User instruction
+### System requirements
+* Requires Python3 with `clams-python`, `clams-utils`, `gensim`, `nltk`, and `scipy` to run the app locally.
+* Requires an HTTP client utility (such as `curl`) to invoke and execute analysis.
+* Requires docker to run the app in a Docker container 
+
+Run `pip install -r requirements.txt` to install the requirements.
+
+### Train a model with NewsHour transcripts using `lda.py`
+> **NOTE:**
+> If you only look to use the keyword extractor app instead of training your own model, 
+> please skip this section and follow instructions in the next section. 
+
+After getting into the working directory, run the following line on the target dataset:
+
+`python lda.py --dataPath path/to/target/dataset/directory`
+
+By running this line, `lda.py` does 2 things:
+* cleans all transcripts in a given directory.
+* generates the pretrained LDA model that stores the dictionary and the corpus. 
+Currently, this file is not allowed to be renamed, or it affects running `cli.py` later on.
+
+> TODO: some other parameters of lda.py 
+
+### Extract keywords using the app 
 
 General user instructions for CLAMS apps are available at [CLAMS Apps documentation](https://apps.clams.ai/clamsapp).
 
-Below is a list of additional information specific to this app.
+To run this app in CLI:
 
-> **note**
-> TO_DEVS: Below is a list of additional information specific to this app.
+`python cli.py --optional_params <input_mmif_file_path> <output_mmif_file_path>`
 
+2 types of input `MMIF` files are acceptable here:
+* The ones that are generated through `clams source text:/path/to/the/target/txt/file` to extract keywords for a single
+text document.
+* The ones whose last view containing TextDocument(s) is the view to extract keywords from.
 
-### System requirements
+Default number of keywords extracted from a given text document is 10. If the number of extracted keywords is required 
+to be different from 10, when running `cli.py`, add `--topN` and a corresponding integer value. 
 
-> **note**
-> TO_DEVS: Any system-level software required to run this app. Usually include some of the following:
-> * supported OS and CPU architectures
-> * usage of GPU
-> * system package names (e.g. `ffmpeg`, `libav`, `libopencv-dev`, etc.)
-> * some example code snippet to install them on Debian/Ubuntu (because our base images are based on Debian)
->     * e.g. `apt-get update && apt-get install -y <package-name>`
+Two scenarios may be seen if the input text document is too short:
+1. If the number of tokens in a text document is smaller than the value of `topN`, 
+then no keywords will be extracted. 
+2. If the text contains lots of stopwords, then the number of extracted keywords can be less than the value of `topN`,
+because the app ignores all stopwords when finding keywords. 
 
 ### Configurable runtime parameter
 
-For the full list of parameters, please refer to the app metadata from the [CLAMS App Directory](https://apps.clams.ai) or the [`metadata.py`](metadata.py) file in this repository.
+For the full list of parameters, please refer to the app metadata from the [CLAMS App Directory](https://apps.clams.ai) 
+or the [`metadata.py`](metadata.py) file in this repository.
 
-> **warning**
-> TO_DEVS: If you're not developing this app for publishing on the CLAMS App Directory, the above paragraph is not applicable. Feel free to delete or change it.
-
-> **note**
-> TO_DEVS: all runtime parameters are supported to be VERY METICULOUSLY documented in the app's `metadata.py` file. However for some reason, if you need to use this space to elaborate what's already documented in `metadata.py`, feel free to do so.
